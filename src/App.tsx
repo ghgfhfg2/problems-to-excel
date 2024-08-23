@@ -1,25 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import {
   Button,
   Input,
   Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Checkbox,
-  VStack,
   Flex,
   Tabs,
   TabList,
   TabPanels,
   Tab,
   TabPanel,
+  useToast,
 } from "@chakra-ui/react";
-import { ResizableBox } from "react-resizable";
 import * as XLSX from "xlsx";
 import {
   defaultValuesType1,
@@ -38,6 +31,9 @@ import {
   defaultValuesType14,
   defaultValuesType15,
 } from "./data/type_1";
+import { headerMap } from "./data/headerMap";
+import { Cell, Header, Row, Table } from "./style";
+import { initialColumnWidths, typeGroups } from "./constant";
 
 type FormItem = {
   [key: string]: string | number;
@@ -47,78 +43,22 @@ type FormValues = {
   [key: string]: FormItem[];
 };
 
-const defaultValue: FormValues = {
-  type1: [...defaultValuesType1],
-  type2: [...defaultValuesType2],
-  type3: [...defaultValuesType3],
-  type4: [...defaultValuesType4],
-  type5: [...defaultValuesType5],
-  type6: [...defaultValuesType6],
-  type7: [...defaultValuesType7],
-  type8: [...defaultValuesType8],
-  type9: [...defaultValuesType9],
-  type10: [...defaultValuesType10],
-  type11: [...defaultValuesType11],
-  type12: [...defaultValuesType12],
-  type13: [...defaultValuesType13],
-  type14: [...defaultValuesType14],
-  type15: [...defaultValuesType15],
-};
-
-// 컬럼 크기 상태를 초기화
-const initialColumnWidths = {
-  type: 50,
-  series: 200,
-  episode: 200,
-  episode_order: 50,
-  difficulty: 50,
-  step: 50,
-  order: 50,
-  qeustion: 300,
-  image: 200,
-  q_sound: 150,
-  q_options: 300,
-  options: 300,
-  o_sound: 150,
-  mean: 100,
-  hint: 200,
-  answer: 150,
-  sub_options: 300,
-  sub_answer: 200,
-};
-
-const headerMap = {
-  type: { label: "유형", width: initialColumnWidths.type },
-  series: { label: "원서 시리즈", width: initialColumnWidths.series },
-  episode: { label: "원서 에피소드", width: initialColumnWidths.episode },
-  episode_order: {
-    label: "에피소드 번호",
-    width: initialColumnWidths.episode_order,
-  },
-  difficulty: { label: "난이도", width: initialColumnWidths.difficulty },
-  step: { label: "스텝", width: initialColumnWidths.step },
-  order: { label: "문제순서", width: initialColumnWidths.order },
-  qeustion: { label: "질문", width: initialColumnWidths.qeustion },
-  image: { label: "이미지", width: initialColumnWidths.image },
-  q_sound: { label: "질문 소리", width: initialColumnWidths.q_sound },
-  q_options: { label: "질문 문항", width: initialColumnWidths.q_options },
-  options: { label: "문항", width: initialColumnWidths.options },
-  o_sound: { label: "문항소리", width: initialColumnWidths.o_sound },
-  mean: { label: "의미", width: initialColumnWidths.mean },
-  hint: { label: "힌트", width: initialColumnWidths.hint },
-  answer: { label: "정답", width: initialColumnWidths.answer },
-  sub_options: { label: "서브 질문", width: initialColumnWidths.sub_options },
-  sub_answer: {
-    label: "서브 질문 정답",
-    width: initialColumnWidths.sub_answer,
-  },
-};
-
-const typeGroups = {
-  A: [1, 2, 3, 4],
-  B: [5, 6, 7, 8],
-  C: [9, 10, 11, 12],
-  D: [13, 14, 15],
+const defaultValues = {
+  type1: defaultValuesType1,
+  type2: defaultValuesType2,
+  type3: defaultValuesType3,
+  type4: defaultValuesType4,
+  type5: defaultValuesType5,
+  type6: defaultValuesType6,
+  type7: defaultValuesType7,
+  type8: defaultValuesType8,
+  type9: defaultValuesType9,
+  type10: defaultValuesType10,
+  type11: defaultValuesType11,
+  type12: defaultValuesType12,
+  type13: defaultValuesType13,
+  type14: defaultValuesType14,
+  type15: defaultValuesType15,
 };
 
 const useFieldArrays = (control: any) => {
@@ -127,93 +67,172 @@ const useFieldArrays = (control: any) => {
   );
 };
 
-const DataTable: React.FC<{
+const DataList: React.FC<{
   fields: any[];
   register: any;
   seriesValue: string;
   onSeriesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEpiChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEpiNumChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   typeKey: string;
   hiddenFields: string[];
   columnWidths: { [key: string]: number };
-  setColumnWidth: (header: string, width: number) => void;
+  onAutoFill: (header: string) => void;
 }> = ({
   fields,
   register,
   seriesValue,
   onSeriesChange,
+  onEpiChange,
+  onEpiNumChange,
   typeKey,
   hiddenFields,
   columnWidths,
-  setColumnWidth,
+  onAutoFill,
 }) => {
   const activeHeaders = Object.keys(headerMap).filter(
     (header) =>
-      fields.some((field) => field[header] !== "") &&
-      !hiddenFields.includes(header)
+      !hiddenFields.includes(header) &&
+      defaultValues[typeKey].some((item) => item[header] !== "")
   );
 
+  const readOnlyList = ["type", "difficulty", "step", "order"];
+
   return (
-    <Table variant="simple" size="sm">
-      <Thead>
-        <Tr>
+    <>
+      <Table>
+        <Header>
           {activeHeaders.map((header) => (
-            <Th key={header} textAlign="left">
-              <ResizableBox
-                width={columnWidths[header]}
-                height={20}
-                axis="x"
-                resizeHandles={["e"]}
-                minConstraints={[50, 20]}
-                maxConstraints={[1000, 20]}
-                onResize={(e, data) => {
-                  setColumnWidth(header, data.size.width);
+            <Cell
+              key={header}
+              style={{
+                flexShrink: "0",
+                flexBasis: columnWidths[header] ? columnWidths[header] : "auto",
+                flexGrow: columnWidths[header] ? "0" : "1",
+              }}
+            >
+              {headerMap[header].label}
+            </Cell>
+          ))}
+        </Header>
+        {fields.map((field, index) => {
+          const isShort =
+            field.type === 1 && field.difficulty === "a" && field.order > 4
+              ? true
+              : field.type === 9 && field.difficulty === "a" && field.order > 4
+              ? true
+              : field.type === 12 && field.difficulty === "b" && field.order > 5
+              ? true
+              : false;
+          if (isShort) return;
+          return (
+            <Row key={field.id}>
+              {activeHeaders.map((header) => (
+                <Cell
+                  key={header}
+                  style={{
+                    flexShrink: "0",
+                    flexBasis: columnWidths[header]
+                      ? columnWidths[header]
+                      : "auto",
+                    flexGrow: columnWidths[header] ? "0" : "1",
+                  }}
+                >
+                  <Input
+                    {...register(`${typeKey}.${index}.${header}`)}
+                    readOnly={readOnlyList.indexOf(header) > -1 ? true : false}
+                    placeholder={
+                      defaultValues[typeKey][index][header] as string
+                    }
+                    onChange={
+                      header === "series"
+                        ? onSeriesChange
+                        : header === "episode"
+                        ? onEpiChange
+                        : header === "episode_order"
+                        ? onEpiNumChange
+                        : undefined
+                    }
+                  />
+                </Cell>
+              ))}
+            </Row>
+          );
+        })}
+        <Row>
+          {activeHeaders.map((header) => {
+            const autoableHeader = ["q_sound", "image", "o_sound"];
+            return (
+              <Cell
+                key={header}
+                style={{
+                  flexShrink: "0",
+                  flexBasis: columnWidths[header]
+                    ? columnWidths[header]
+                    : "auto",
+                  flexGrow: columnWidths[header] ? "0" : "1",
                 }}
               >
-                <div style={{ width: "100%", whiteSpace: "nowrap" }}>
-                  {headerMap[header].label}
-                </div>
-              </ResizableBox>
-            </Th>
-          ))}
-        </Tr>
-      </Thead>
-      <Tbody>
-        {fields.map((field, index) => (
-          <Tr key={field.id}>
-            {activeHeaders.map((header) => (
-              <Td
-                key={header}
-                width={`${columnWidths[header]}px`}
-                textAlign="left"
-              >
-                <Input
-                  {...register(`${typeKey}.${index}.${header}`)}
-                  value={header === "series" ? seriesValue : undefined}
-                  onChange={header === "series" ? onSeriesChange : undefined}
-                  width={`${columnWidths[header]}px`} // 인풋의 크기 적용
-                  textAlign="left"
-                />
-              </Td>
-            ))}
-          </Tr>
-        ))}
-      </Tbody>
-    </Table>
+                {autoableHeader.includes(header) && (
+                  <Button
+                    onClick={() => onAutoFill(header)}
+                    size={"sm"}
+                    width={"100%"}
+                    fontSize={"11px"}
+                  >
+                    자동
+                  </Button>
+                )}
+              </Cell>
+            );
+          })}
+        </Row>
+      </Table>
+    </>
   );
 };
 
 export const App: React.FC = () => {
-  const { register, control, handleSubmit, setValue } = useForm<FormValues>({
-    defaultValues: defaultValue,
-  });
+  const { register, control, handleSubmit, setValue, reset, getValues } =
+    useForm<FormValues>({
+      defaultValues,
+    });
 
   const fieldArrays = useFieldArrays(control);
   const [seriesValue, setSeriesValue] = useState("");
+  const [epsodeValue, setEpsodeValue] = useState("");
+  const [episodeNumValue, setEpisodeNumValue] = useState("");
   const [hiddenFields, setHiddenFields] = useState<string[]>([
     "step",
     "difficulty",
   ]);
-  const [columnWidths, setColumnWidths] = useState(initialColumnWidths);
+  const [activeTab, setActiveTab] = useState(0); // 활성화된 탭을 추적하는 상태
+  const [columnWidths] = useState(initialColumnWidths);
+
+  useEffect(() => {
+    console.log("reset");
+    const currentValues = getValues();
+
+    // 특정 필드를 제외한 나머지 필드를 초기화
+    const fieldsToPreserve = ["type", "difficulty", "step", "order"];
+
+    const resetData = Object.keys(currentValues).reduce((acc, typeKey) => {
+      acc[typeKey] = currentValues[typeKey].map((item) => {
+        const newItem: { [key: string]: string | number } = {};
+        Object.keys(item).forEach((key) => {
+          if (fieldsToPreserve.includes(key)) {
+            newItem[key] = item[key]; // 유지할 필드는 그대로
+          } else {
+            newItem[key] = ""; // 나머지는 빈 값으로 초기화
+          }
+        });
+        return newItem;
+      });
+      return acc;
+    }, {} as FormValues);
+
+    reset(resetData); // reset 함수 호출
+  }, [reset, getValues, activeTab]);
 
   const onSeriesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -221,7 +240,31 @@ export const App: React.FC = () => {
 
     fieldArrays.forEach(({ fields }, index) => {
       const typeKey = `type${index + 1}`;
-      fields.forEach((_, i) => setValue(`${typeKey}.${i}.series`, value));
+      fields.forEach((_, i) => {
+        setValue(`${typeKey}.${i}.series`, value);
+      });
+    });
+  };
+
+  const onEpiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEpsodeValue(value);
+
+    fieldArrays.forEach(({ fields }, index) => {
+      const typeKey = `type${index + 1}`;
+      fields.forEach((_, i) => setValue(`${typeKey}.${i}.episode`, value));
+    });
+  };
+
+  const onEpiNumChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEpisodeNumValue(value);
+
+    fieldArrays.forEach(({ fields }, index) => {
+      const typeKey = `type${index + 1}`;
+      fields.forEach((_, i) =>
+        setValue(`${typeKey}.${i}.episode_order`, value)
+      );
     });
   };
 
@@ -231,14 +274,43 @@ export const App: React.FC = () => {
     );
   };
 
+  const toast = useToast();
+
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    const combinedData = Object.keys(data).flatMap((typeKey) =>
-      data[typeKey].map((item) => {
+    const groupKeys = Object.keys(typeGroups);
+    const activeGroup = groupKeys[activeTab]; // 현재 활성화된 그룹의 키를 가져옴
+
+    // // 빈값이 있는지 확인하는 로직 추가
+    // const hasEmptyValues = typeGroups[
+    //   activeGroup as keyof typeof typeGroups
+    // ].some((typeIndex) =>
+    //   data[`type${typeIndex}`].some((item) => {
+    //     return Object.values(item).some((val) => {
+    //       return val === "";
+    //     });
+    //   })
+    // );
+
+    // // 빈값이 있는 경우 경고창을 띄우고 함수 종료
+    // if (hasEmptyValues) {
+    //   toast({
+    //     description: "빈 입력값이 있습니다. 모든 값을 입력해주세요.",
+    //     status: "error",
+    //     duration: 1500,
+    //     isClosable: false,
+    //     position: "top",
+    //   });
+    //   return;
+    // }
+
+    // 빈값이 없는 경우에만 엑셀 추출 진행
+    const combinedData = typeGroups[
+      activeGroup as keyof typeof typeGroups
+    ].flatMap((typeIndex) =>
+      data[`type${typeIndex}`].map((item) => {
         const newItem = {};
         Object.keys(item).forEach((key) => {
-          if (!hiddenFields.includes(key)) {
-            newItem[headerMap[key].label] = item[key];
-          }
+          newItem[headerMap[key].label] = item[key];
         });
         return newItem;
       })
@@ -246,16 +318,37 @@ export const App: React.FC = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "CombinedData");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
 
     XLSX.writeFile(workbook, "data.xlsx");
   };
 
-  const setColumnWidth = (header: string, width: number) => {
-    setColumnWidths((prevWidths) => ({
-      ...prevWidths,
-      [header]: width,
-    }));
+  const onAutoFill = (header: string) => {
+    console.log(getValues());
+    return;
+    fieldArrays.forEach(({ fields }, index) => {
+      const typeKey = `type${index + 1}`;
+
+      // 첫 번째 값 가져오기
+      const firstValue = getValues(`${typeKey}.0.${header}`);
+
+      if (!firstValue) return; // 첫 번째 값이 없으면 종료
+
+      const matches = firstValue.match(/(.*?)(\d+)(\.\w+)$/); // 숫자로 끝나는 경우 찾기
+      if (matches) {
+        const [_, prefix, num, ext] = matches;
+        const startNum = parseInt(num, 10);
+
+        fields.forEach((_, index) => {
+          const newValue = `${prefix}${startNum + index}${ext}`;
+          setValue(`${typeKey}.0.${header}`, newValue);
+        });
+      } else {
+        console.error(
+          "The format of the first value is not suitable for auto-fill"
+        );
+      }
+    });
   };
 
   return (
@@ -271,29 +364,36 @@ export const App: React.FC = () => {
           </Checkbox>
         ))}
       </Flex>
-      <Tabs>
-        <TabList>
-          <Tab>A</Tab>
-          <Tab>B</Tab>
-          <Tab>C</Tab>
-          <Tab>D</Tab>
+      <Tabs
+        variant="soft-rounded"
+        colorScheme="green"
+        onChange={(index) => setActiveTab(index)}
+      >
+        {" "}
+        {/* 활성화된 탭 추적 */}
+        <TabList style={{ gap: "1rem", paddingLeft: "1.5rem" }}>
+          <Tab width={70}>A</Tab>
+          <Tab width={70}>B</Tab>
+          <Tab width={70}>C</Tab>
+          <Tab width={70}>A-1</Tab>
         </TabList>
-
         <TabPanels>
           {Object.keys(typeGroups).map((groupKey) => (
             <TabPanel key={groupKey}>
               {typeGroups[groupKey as keyof typeof typeGroups].map(
                 (typeIndex) => (
                   <Box mb={6} key={`type${typeIndex}`}>
-                    <DataTable
+                    <DataList
                       fields={fieldArrays[typeIndex - 1].fields}
                       register={register}
                       seriesValue={seriesValue}
                       onSeriesChange={onSeriesChange}
+                      onEpiChange={onEpiChange}
+                      onEpiNumChange={onEpiNumChange}
                       typeKey={`type${typeIndex}`}
                       hiddenFields={hiddenFields}
                       columnWidths={columnWidths}
-                      setColumnWidth={setColumnWidth}
+                      onAutoFill={onAutoFill}
                     />
                   </Box>
                 )
@@ -303,9 +403,15 @@ export const App: React.FC = () => {
         </TabPanels>
       </Tabs>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Button mt={4} colorScheme="blue" type="submit">
-          제출
-        </Button>
+        <Flex justifyContent={"center"} mb={10}>
+          <Button
+            style={{ width: "300px", height: "50px" }}
+            colorScheme="green"
+            type="submit"
+          >
+            Excel 추출
+          </Button>
+        </Flex>
       </form>
     </Box>
   );
