@@ -74,6 +74,7 @@ const DataList: React.FC<{
   onSeriesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEpiChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEpiNumChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSetValue: (e: React.ChangeEvent<HTMLInputElement>, name: string) => void;
   typeKey: string;
   hiddenFields: string[];
   columnWidths: { [key: string]: number };
@@ -81,10 +82,10 @@ const DataList: React.FC<{
 }> = ({
   fields,
   register,
-  seriesValue,
   onSeriesChange,
   onEpiChange,
   onEpiNumChange,
+  onSetValue,
   typeKey,
   hiddenFields,
   columnWidths,
@@ -151,7 +152,7 @@ const DataList: React.FC<{
                         ? onEpiChange
                         : header === "episode_order"
                         ? onEpiNumChange
-                        : undefined
+                        : (e) => onSetValue(e, `${typeKey}.${index}.${header}`)
                     }
                   />
                 </Cell>
@@ -240,9 +241,7 @@ export const App: React.FC = () => {
 
     fieldArrays.forEach(({ fields }, index) => {
       const typeKey = `type${index + 1}`;
-      fields.forEach((_, i) => {
-        setValue(`${typeKey}.${i}.series`, value);
-      });
+      fields.forEach((_, i) => setValue(`${typeKey}.${i}.series`, value));
     });
   };
 
@@ -266,6 +265,12 @@ export const App: React.FC = () => {
         setValue(`${typeKey}.${i}.episode_order`, value)
       );
     });
+  };
+
+  const onSetValue = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {
+    console.log(e);
+    const value = e.target.value;
+    setValue(name, value);
   };
 
   const toggleHiddenField = (field: string) => {
@@ -377,6 +382,17 @@ export const App: React.FC = () => {
           <Tab width={70}>C</Tab>
           <Tab width={70}>A-1</Tab>
         </TabList>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Flex justifyContent={"center"} mb={10}>
+            <Button
+              style={{ width: "300px", height: "50px" }}
+              colorScheme="green"
+              type="submit"
+            >
+              Excel 추출
+            </Button>
+          </Flex>
+        </form>
         <TabPanels>
           {Object.keys(typeGroups).map((groupKey) => (
             <TabPanel key={groupKey}>
@@ -390,6 +406,7 @@ export const App: React.FC = () => {
                       onSeriesChange={onSeriesChange}
                       onEpiChange={onEpiChange}
                       onEpiNumChange={onEpiNumChange}
+                      onSetValue={onSetValue}
                       typeKey={`type${typeIndex}`}
                       hiddenFields={hiddenFields}
                       columnWidths={columnWidths}
