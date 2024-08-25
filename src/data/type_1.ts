@@ -275,7 +275,8 @@ export const defaultValuesType3 = [
     image: "",
     q_sound: "",
     q_options: "",
-    options: "jog.png / mouse.png / desk.png / apple.png",
+    options:
+      "jog.png / mouse.png / desk.png / apple.png (단어를 파일명으로 입력)",
     o_sound: "",
     mean: "",
     hint: "",

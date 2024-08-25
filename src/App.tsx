@@ -13,6 +13,7 @@ import {
   TabPanel,
   useToast,
   Text,
+  Switch,
 } from "@chakra-ui/react";
 import * as XLSX from "xlsx";
 import {
@@ -33,12 +34,15 @@ import {
   defaultValuesType15,
 } from "./data/type_1";
 import { headerMap } from "./data/headerMap";
-import { Cell, Header, Row, Table, WrapperStyle } from "./style";
+import { Cell, Header, Row, Table, TabMenuStyle, WrapperStyle } from "./style";
 import { initialColumnWidths, typeGroups } from "./constant";
 import { FiInfo } from "react-icons/fi";
 import { SiMicrosoftexcel } from "react-icons/si";
 import { MdCopyright, MdOutlineDelete } from "react-icons/md";
 import { convertType3Options } from "./validation";
+import { LuCopyPlus } from "react-icons/lu";
+import { CgFileDocument } from "react-icons/cg";
+import { GoMoveToTop } from "react-icons/go";
 
 type FormItem = {
   [key: string]: string | number;
@@ -144,6 +148,7 @@ const DataList: React.FC<{
           {activeHeaders.map((header) => (
             <Cell
               key={header}
+              className="table-header"
               style={{
                 flexShrink: "0",
                 flexBasis: columnWidths[header] ? columnWidths[header] : "auto",
@@ -225,7 +230,11 @@ const DataList: React.FC<{
                       width={"100%"}
                       fontSize={"11px"}
                     >
-                      자동
+                      <LuCopyPlus
+                        fontSize={"14px"}
+                        style={{ marginRight: "5px" }}
+                      />
+                      Auto Fill
                     </Button>
                   )}
               </Cell>
@@ -260,9 +269,13 @@ export const App: React.FC = () => {
     "order",
   ]);
   const [activeTab, setActiveTab] = useState(0); // 활성화된 탭을 추적하는 상태
-  const [pendingTab, setPendingTab] = useState<number>(0); // 이동을 원하는 탭을 추적하는 상태
   const [columnWidths] = useState(initialColumnWidths);
   const [onResetState, setOnResetState] = useState(false);
+  const [emptyCheckState, setEmptyCheckState] = useState(true);
+
+  const onChangeEmptyCheck = () => {
+    setEmptyCheckState(!emptyCheckState);
+  };
 
   useEffect(() => {
     const currentValues = getValues();
@@ -344,6 +357,31 @@ export const App: React.FC = () => {
 
   const toast = useToast();
 
+  const onChangeTab = (idx: number) => {
+    if (idx === activeTab) return;
+    const allInputs = document
+      .querySelectorAll(`.tab-table-box`)
+      [activeTab].querySelectorAll("input");
+    let isValue = false;
+    for (let i = 0; i < allInputs.length; i++) {
+      if (!allInputs[i].hasAttribute("readOnly") && allInputs[i].value !== "") {
+        isValue = true;
+        break;
+      }
+    }
+    const tab = document.querySelector(`.tab-${idx}`) as HTMLElement;
+    if (isValue) {
+      const moveConfirm = confirm(
+        "입력중인 항목이 있습니다.\n난이도를 변경하면 입력한 값이 모두 초기화 됩니다.\n이동 하시겠습니까?"
+      );
+      if (moveConfirm) {
+        tab.click();
+      }
+    } else {
+      tab.click();
+    }
+  };
+
   const onEmptyCheck = () => {
     const allInputs = document
       .querySelectorAll(`.tab-table-box`)
@@ -364,19 +402,26 @@ export const App: React.FC = () => {
         position: "top",
       });
       empty.focus();
-      return;
     }
     return empty;
   };
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     // 빈값 체크
-    const emptyCheck = onEmptyCheck();
-    if (emptyCheck) return;
+    if (emptyCheckState) {
+      const emptyCheck = onEmptyCheck();
+      if (emptyCheck) return;
+    }
 
     const groupKeys = Object.keys(typeGroups);
     const activeGroup = groupKeys[activeTab]; // 현재 활성화된 그룹의 키를 가져옴
     const activeTypes = typeGroups[activeGroup];
+
+    let stopState = "";
+    const toastList = {
+      b14: "B안-유형14의 문항수는 5개여야 합니다",
+      c14: "C안-유형14의 문항수는 8개여야 입니다.",
+    };
 
     for (const key in data) {
       const objArr = data[key];
@@ -385,6 +430,17 @@ export const App: React.FC = () => {
         activeArr.forEach((el) => {
           if (el.type === 3 && el.options !== "") {
             el.options = convertType3Options(el.options as string);
+          }
+          if (el.type === 14) {
+            const optionLength = (el.options as string).split("/").length;
+            if (el.difficulty === "b" && optionLength !== 5) {
+              stopState = "b14";
+              return;
+            }
+            if (el.difficulty === "c" && optionLength !== 8) {
+              stopState = "c14";
+              return;
+            }
           }
           //문제 개별 행
           for (const key in el) {
@@ -399,51 +455,15 @@ export const App: React.FC = () => {
       }
     }
 
-    const combinedData = typeGroups[
-      activeGroup as keyof typeof typeGroups
-    ].flatMap((typeIndex) =>
-      data[`type${typeIndex}`].map((item) => {
-        const newItem = {};
-        Object.keys(item).forEach((key) => {
-          newItem[headerMap[key].excelHeader] = item[key];
-        });
-        return newItem;
-      })
-    );
-
-    const worksheet = XLSX.utils.json_to_sheet(combinedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
-
-    XLSX.writeFile(workbook, "data.xlsx");
-  };
-
-  const onForceSumbit = () => {
-    const data = getValues();
-
-    const groupKeys = Object.keys(typeGroups);
-    const activeGroup = groupKeys[activeTab]; // 현재 활성화된 그룹의 키를 가져옴
-    const activeTypes = typeGroups[activeGroup];
-
-    for (const key in data) {
-      const objArr = data[key];
-      const activeArr = objArr.filter((el) => activeTypes.includes(el.type));
-      if (activeArr.length > 0) {
-        activeArr.forEach((el) => {
-          if (el.type === 3 && el.options !== "") {
-            el.options = convertType3Options(el.options as string);
-          }
-          //문제 개별 행
-          for (const key in el) {
-            if (typeof el[key] === "string") {
-              el[key] =
-                el[key].indexOf("/") > -1 && el[key].indexOf("[") === -1
-                  ? `[${el[key]}]`
-                  : el[key];
-            }
-          }
-        });
-      }
+    if (stopState) {
+      toast({
+        description: `${toastList[stopState]}`,
+        status: "info",
+        isClosable: false,
+        duration: 1500,
+        position: "top",
+      });
+      return;
     }
 
     const combinedData = typeGroups[
@@ -510,6 +530,13 @@ export const App: React.FC = () => {
     });
   };
 
+  const onMoveTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <WrapperStyle>
       <Box className="container" width="100%" margin="0 auto">
@@ -532,8 +559,47 @@ export const App: React.FC = () => {
           ))}
         </Flex>
         <div className="content-box">
+          <TabMenuStyle>
+            <li>
+              <button
+                onClick={() => onChangeTab(0)}
+                className={activeTab === 0 ? "on" : ""}
+              >
+                <CgFileDocument />
+                A난이도(non-fiction)
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onChangeTab(1)}
+                className={activeTab === 1 ? "on" : ""}
+              >
+                <CgFileDocument />
+                B난이도
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onChangeTab(2)}
+                className={activeTab === 2 ? "on" : ""}
+              >
+                <CgFileDocument />
+                C난이도
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onChangeTab(3)}
+                className={activeTab === 3 ? "on" : ""}
+              >
+                <CgFileDocument />
+                A난이도(fiction)
+              </button>
+            </li>
+          </TabMenuStyle>
           <Tabs
-            variant="soft-rounded"
+            variant="solid-rounded"
+            size={"lg"}
             colorScheme="green"
             onChange={(index) => {
               setActiveTab(index);
@@ -541,26 +607,24 @@ export const App: React.FC = () => {
           >
             {/* 활성화된 탭 추적 */}
             <Flex alignItems={"center"} justifyContent={"space-between"}>
-              <TabList style={{ gap: "1rem" }}>
-                <Tab px={"1.5rem"}>A안(non-fiction)</Tab>
-                <Tab px={"1.5rem"}>B안</Tab>
-                <Tab px={"1.5rem"}>C안</Tab>
-                <Tab
-                  onClick={() => setPendingTab(3)}
-                  className="tab-3"
-                  px={"1.5rem"}
-                >
-                  A안(fiction)
+              <TabList className="tab-menu-list">
+                <Tab className="tab-0" px={"2rem"}>
+                  <CgFileDocument />
+                  A난이도(non-fiction)
+                </Tab>
+                <Tab className="tab-1" px={"2rem"}>
+                  <CgFileDocument />
+                  B난이도
+                </Tab>
+                <Tab className="tab-2" px={"2rem"}>
+                  <CgFileDocument />
+                  C난이도
+                </Tab>
+                <Tab className="tab-3" px={"1.5rem"}>
+                  <CgFileDocument />
+                  A난이도(fiction)
                 </Tab>
               </TabList>
-              <Button
-                onClick={onForceSumbit}
-                size={"sm"}
-                colorScheme="gray"
-                type="submit"
-              >
-                테스트용 Excel 강제 추출
-              </Button>
             </Flex>
             <form
               onSubmit={(e) => {
@@ -569,8 +633,18 @@ export const App: React.FC = () => {
               }}
             >
               <div className="excel-btn-box">
+                <Flex flexDirection={"column"} alignItems={"center"} gap={1}>
+                  <Switch
+                    onChange={onChangeEmptyCheck}
+                    checked={emptyCheckState}
+                    defaultChecked
+                    colorScheme="green"
+                    size="lg"
+                  />
+                  <Text fontSize={"12px"}>빈값체크</Text>
+                </Flex>
                 <Button className="btn-exit" colorScheme="green" type="submit">
-                  <SiMicrosoftexcel /> Excel 추출
+                  <SiMicrosoftexcel /> Export to Excel
                 </Button>
                 <Button
                   className="btn-delete"
@@ -583,7 +657,7 @@ export const App: React.FC = () => {
             </form>
             <ul className="top-info">
               <li>- 여러문항은 / 로 구분하여 작성</li>
-              <li>- 빈칸 부분은 @_ 로 작성</li>
+              <li>- 빈칸으로 표시될 부분은 @_ 로 작성 (유형 7,14)</li>
               <li>
                 - ctrl + 방향키로 인풋커서 이동 / ctrl + enter키로 다음행 이동
               </li>
@@ -623,7 +697,7 @@ export const App: React.FC = () => {
         >
           <div className="excel-btn-box">
             <Button className="btn-exit" colorScheme="green" type="submit">
-              <SiMicrosoftexcel /> Excel 추출
+              <SiMicrosoftexcel /> Export to Excel
             </Button>
             <Button
               className="btn-delete"
@@ -634,6 +708,9 @@ export const App: React.FC = () => {
             </Button>
           </div>
         </form>
+        <Button onClick={onMoveTop} className="btn-top-move" size={"lg"}>
+          <GoMoveToTop />
+        </Button>
       </Box>
       <div className="footer">
         <MdCopyright />

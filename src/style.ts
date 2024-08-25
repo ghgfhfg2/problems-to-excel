@@ -63,7 +63,77 @@ export const WrapperStyle = styled.div`
     width: auto;
     height: 60px;
     svg {
-      font-size: 20px;
+      font-size: 19px;
+    }
+  }
+  .tab-menu-list {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: -10;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    gap: 1rem;
+    .chakra-tabs__tab {
+      gap: 5px;
+      border: 1px solid #2f855a;
+      color: #2f855a;
+      &[aria-selected="true"] {
+        color: #fff;
+      }
+      svg {
+        font-size: 1.2rem;
+        margin-top: 1px;
+      }
+      font-size: 1rem;
+    }
+  }
+  .table-header {
+  }
+  .btn-top-move {
+    position: fixed;
+    right: 2rem;
+    bottom: 2rem;
+    z-index: 10;
+    box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.25);
+    font-size: 1.5rem;
+  }
+`;
+
+export const TabMenuStyle = styled.ul`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  li button {
+    padding: 1rem 1.2rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-size: 1rem;
+    font-weight: 600;
+    gap: 7px;
+    transition: all 0.3s;
+    svg {
+      font-size: 1.2rem;
+    }
+    &.on {
+      background-color: #2f855a;
+      border-color: #2f855a;
+      color: #fff;
+      &:hover {
+        background-color: #29754f;
+        border-color: #29754f;
+      }
+    }
+    &:hover {
+      border-color: #2f855a;
     }
   }
 `;
@@ -77,7 +147,8 @@ export const Table = styled.ul`
 
 export const Header = styled.li`
   font-weight: bold;
-  border-bottom: 2px solid #000;
+  border-top: 2px solid #555;
+  border-bottom: 1px solid #555;
   display: flex;
   font-size: 12px;
   background-color: #f1f1f1;
