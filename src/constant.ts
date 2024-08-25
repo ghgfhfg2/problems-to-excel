@@ -9,7 +9,7 @@ export const initialColumnWidths = {
   order: 70,
   qeustion: 300,
   image: 200,
-  q_sound: 150,
+  q_sound: 250,
   q_options: 0,
   options: 0,
   o_sound: 150,
