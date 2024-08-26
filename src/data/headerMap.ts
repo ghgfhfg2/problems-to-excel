@@ -28,10 +28,10 @@ export const headerMap = {
     label: "문제순서",
     width: initialColumnWidths.order,
   },
-  qeustion: {
-    excelHeader: "qeustion",
+  question: {
+    excelHeader: "question",
     label: "질문",
-    width: initialColumnWidths.qeustion,
+    width: initialColumnWidths.question,
   },
   image: {
     excelHeader: "image",

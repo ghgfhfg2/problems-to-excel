@@ -6,7 +6,7 @@ export const defaultVal = {
   difficulty: "",
   step: "",
   order: "",
-  qeustion: "",
+  question: "",
   image: "",
   q_sound: "",
   q_options: "",

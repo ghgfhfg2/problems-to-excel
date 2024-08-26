@@ -7,7 +7,7 @@ export const initialColumnWidths = {
   difficulty: 70,
   step: 70,
   order: 70,
-  qeustion: 300,
+  question: 300,
   image: 200,
   q_sound: 250,
   q_options: 0,
