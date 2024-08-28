@@ -14,7 +14,7 @@ export const headerMap = {
   },
   episode_order: {
     excelHeader: "episode_order",
-    label: "에피소드 번호",
+    label: "에피소드 순서",
     width: initialColumnWidths.episode_order,
   },
   difficulty: {

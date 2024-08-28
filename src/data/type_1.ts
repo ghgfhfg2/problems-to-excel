@@ -1350,7 +1350,7 @@ export const defaultValuesType14 = [
     episode: "#01 The Big Halloween Scare",
     episode_order: 1,
     difficulty: "b",
-    step: 4,
+    step: 5,
     order: 1,
     question: "",
     image: "",

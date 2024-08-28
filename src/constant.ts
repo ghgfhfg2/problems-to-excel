@@ -25,4 +25,7 @@ export const typeGroups = {
   B: [1, 10, 11, 12, 13, 14, 9],
   C: [2, 5, 12, 13, 15, 14],
   D: [1, 3, 4, 6, 8, 9],
+  E: [2, 5, 12, 13, 15],
 };
+
+export const activeTabDifficulty = ["a", "b", "c", "a", "c"];

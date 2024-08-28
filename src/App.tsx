@@ -35,7 +35,11 @@ import {
 } from "./data/type_1";
 import { headerMap } from "./data/headerMap";
 import { Cell, Header, Row, Table, TabMenuStyle, WrapperStyle } from "./style";
-import { initialColumnWidths, typeGroups } from "./constant";
+import {
+  activeTabDifficulty,
+  initialColumnWidths,
+  typeGroups,
+} from "./constant";
 import { FiInfo } from "react-icons/fi";
 import { SiMicrosoftexcel } from "react-icons/si";
 import { MdCopyright, MdOutlineDelete } from "react-icons/md";
@@ -433,22 +437,13 @@ export const App: React.FC = () => {
           }
           if (el.type === 14) {
             const optionLength = (el.options as string).split("/").length;
-            if (el.difficulty === "b" && optionLength !== 5) {
+            if (activeTab === 1 && optionLength !== 5) {
               stopState = "b14";
               return;
             }
-            if (el.difficulty === "c" && optionLength !== 8) {
+            if (activeTab === 2 && optionLength !== 8) {
               stopState = "c14";
               return;
-            }
-          }
-          //문제 개별 행
-          for (const key in el) {
-            if (typeof el[key] === "string") {
-              el[key] =
-                el[key].indexOf("/") > -1 && el[key].indexOf("[") === -1
-                  ? `[${el[key]}]`
-                  : el[key];
             }
           }
         });
@@ -464,6 +459,34 @@ export const App: React.FC = () => {
         position: "top",
       });
       return;
+    }
+
+    for (const key in data) {
+      const objArr = data[key];
+      const activeArr = objArr.filter((el) => activeTypes.includes(el.type));
+      if (activeArr.length > 0) {
+        activeArr.forEach((el) => {
+          //문제 개별 행
+          for (const key in el) {
+            if (typeof el[key] === "string") {
+              el[key] =
+                el[key].indexOf("/") > -1 && el[key].indexOf("[") === -1
+                  ? `[${el[key]}]`
+                  : el[key];
+            }
+            if (key === "difficulty") {
+              console.log(el.type, el[key], activeTabDifficulty[activeTab]);
+              el[key] = activeTabDifficulty[activeTab];
+            }
+            if (activeTab === 1 && el.type === 14 && key === "step") {
+              el[key] = 4;
+            }
+            if (activeTab === 1 && el.type === 9 && key === "step") {
+              el[key] = 5;
+            }
+          }
+        });
+      }
     }
 
     const combinedData = typeGroups[
@@ -596,6 +619,15 @@ export const App: React.FC = () => {
                 A난이도(fiction)
               </button>
             </li>
+            <li>
+              <button
+                onClick={() => onChangeTab(4)}
+                className={activeTab === 4 ? "on" : ""}
+              >
+                <CgFileDocument />
+                C난이도(fiction)
+              </button>
+            </li>
           </TabMenuStyle>
           <Tabs
             variant="solid-rounded"
@@ -618,11 +650,15 @@ export const App: React.FC = () => {
                 </Tab>
                 <Tab className="tab-2" px={"2rem"}>
                   <CgFileDocument />
-                  C난이도
+                  C난이도(non-fiction)
                 </Tab>
                 <Tab className="tab-3" px={"1.5rem"}>
                   <CgFileDocument />
                   A난이도(fiction)
+                </Tab>
+                <Tab className="tab-4" px={"1.5rem"}>
+                  <CgFileDocument />
+                  C난이도(fiction)
                 </Tab>
               </TabList>
             </Flex>
