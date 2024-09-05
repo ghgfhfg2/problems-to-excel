@@ -184,6 +184,10 @@ export const BookCodeSearchListStyle = styled.ul`
     align-items: center;
     font-size: 12px;
     justify-content: space-between;
+    .search-text {
+      font-weight: 600;
+      color: #dd521a;
+    }
     .code-box {
       display: flex;
       align-items: center;

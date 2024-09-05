@@ -94,6 +94,7 @@ const useFieldArrays = (control: any) => {
 };
 
 const DataList: React.FC<{
+  activeTab: number;
   fields: any[];
   register: any;
   seriesValue: string;
@@ -107,6 +108,7 @@ const DataList: React.FC<{
   columnWidths: { [key: string]: number };
   onAutoFill: (typeKey: string, header: string) => void;
 }> = ({
+  activeTab,
   fields,
   register,
   onBookcodeChange,
@@ -184,11 +186,14 @@ const DataList: React.FC<{
         </Header>
         {fields.map((field, index) => {
           const isShort =
-            field.type === 1 && field.difficulty === "a" && field.order > 4
+            (field.type === 1 && activeTab === 0 && field.order > 4) ||
+            (field.type === 1 && activeTab === 3 && field.order > 4)
               ? true
-              : field.type === 9 && field.difficulty === "a" && field.order > 4
+              : (field.type === 9 && activeTab === 0 && field.order > 4) ||
+                (field.type === 9 && activeTab === 3 && field.order > 4)
               ? true
-              : field.type === 12 && field.difficulty === "b" && field.order > 5
+              : (field.type === 12 && activeTab === 1 && field.order > 5) ||
+                (field.type === 12 && activeTab === 4 && field.order > 5)
               ? true
               : false;
           if (isShort) return;
@@ -508,12 +513,6 @@ export const App: React.FC = () => {
               console.log(el.type, el[key], activeTabDifficulty[activeTab]);
               el[key] = activeTabDifficulty[activeTab];
             }
-            if (activeTab === 1 && el.type === 14 && key === "step") {
-              el[key] = 4;
-            }
-            if (activeTab === 1 && el.type === 9 && key === "step") {
-              el[key] = 5;
-            }
           }
         });
       }
@@ -577,6 +576,7 @@ export const App: React.FC = () => {
           const input = document.querySelector(
             `input[name='${typeKey}.${index}.${header}']`
           ) as HTMLInputElement;
+          if (!input) return;
           input.value = newValue;
         }
       });
@@ -605,7 +605,7 @@ export const App: React.FC = () => {
             setSearchBookCodeList(res.data);
           }
         });
-    }, 300);
+    }, 400);
     return () => clearTimeout(delayDebounceTimer);
   }, [bookCodeSearch]);
   const handleInputChange = (event) => {
@@ -693,6 +693,15 @@ export const App: React.FC = () => {
                 className={activeTab === 4 ? "on" : ""}
               >
                 <CgFileDocument />
+                B난이도(fiction)
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => onChangeTab(5)}
+                className={activeTab === 5 ? "on" : ""}
+              >
+                <CgFileDocument />
                 C난이도(fiction)
               </button>
             </li>
@@ -725,6 +734,10 @@ export const App: React.FC = () => {
                   A난이도(fiction)
                 </Tab>
                 <Tab className="tab-4" px={"1.5rem"}>
+                  <CgFileDocument />
+                  B난이도(fiction)
+                </Tab>
+                <Tab className="tab-5" px={"1.5rem"}>
                   <CgFileDocument />
                   C난이도(fiction)
                 </Tab>
@@ -777,22 +790,36 @@ export const App: React.FC = () => {
                   />
                   <BookCodeSearchListStyle>
                     {searchBookCodeList &&
-                      searchBookCodeList.map((el) => (
-                        <li>
-                          <span>{el.title}</span>
-                          <div className="code-box">
-                            <span>{el.book_code}</span>
-                            <Button
-                              onClick={() =>
-                                onSearchBookCodeChange(el.book_code)
-                              }
-                              size={"sm"}
-                            >
-                              선택
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
+                      searchBookCodeList.map((el, idx) => {
+                        const toLowTitle = el.title.toLowerCase();
+                        const toLowSearch = bookCodeSearch.toLowerCase();
+                        const splitTitle = el.title
+                          ? toLowTitle.split(toLowSearch)
+                          : "";
+                        if (!splitTitle) return;
+                        return (
+                          <li key={idx}>
+                            <span>
+                              {splitTitle[0]}
+                              <span className="search-text">
+                                {bookCodeSearch}
+                              </span>
+                              {splitTitle[1]}
+                            </span>
+                            <div className="code-box">
+                              <span>{el.book_code}</span>
+                              <Button
+                                onClick={() =>
+                                  onSearchBookCodeChange(el.book_code)
+                                }
+                                size={"sm"}
+                              >
+                                선택
+                              </Button>
+                            </div>
+                          </li>
+                        );
+                      })}
                   </BookCodeSearchListStyle>
                 </ModalBody>
               </ModalContent>
@@ -824,6 +851,7 @@ export const App: React.FC = () => {
                     (typeIndex) => (
                       <Box mb={6} key={`type${typeIndex}`}>
                         <DataList
+                          activeTab={activeTab}
                           fields={fieldArrays[typeIndex - 1].fields}
                           register={register}
                           seriesValue={seriesValue}
