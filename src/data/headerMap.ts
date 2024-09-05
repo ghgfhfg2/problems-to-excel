@@ -1,6 +1,11 @@
 import { initialColumnWidths } from "../constant";
 
 export const headerMap = {
+  book_code: {
+    excelHeader: "book_code",
+    label: "북 코드",
+    width: initialColumnWidths.book_code,
+  },
   type: { excelHeader: "type", label: "유형", width: initialColumnWidths.type },
   series: {
     excelHeader: "series",

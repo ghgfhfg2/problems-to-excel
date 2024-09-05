@@ -167,11 +167,30 @@ export const Cell = styled.span`
   input::placeholder {
     color: #bbb;
   }
-  input:read-only {
-    background-color: #f1f1f1;
-    color: #aaa;
-  }
+
   &:last-child {
     border-right: none;
+  }
+`;
+
+export const BookCodeSearchListStyle = styled.ul`
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  li {
+    padding: 5px 0 5px 10px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    justify-content: space-between;
+    .code-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    &:hover {
+      background-color: #f1f1f1;
+    }
   }
 `;

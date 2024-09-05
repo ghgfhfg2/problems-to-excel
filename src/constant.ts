@@ -1,5 +1,6 @@
 // 컬럼 크기 상태를 초기화
 export const initialColumnWidths = {
+  book_code: 100,
   type: 70,
   series: 250,
   episode: 250,

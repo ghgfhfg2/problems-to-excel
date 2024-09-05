@@ -14,6 +14,11 @@ import {
   useToast,
   Text,
   Switch,
+  Modal,
+  useDisclosure,
+  ModalOverlay,
+  ModalContent,
+  ModalBody,
 } from "@chakra-ui/react";
 import * as XLSX from "xlsx";
 import {
@@ -34,19 +39,27 @@ import {
   defaultValuesType15,
 } from "./data/type_1";
 import { headerMap } from "./data/headerMap";
-import { Cell, Header, Row, Table, TabMenuStyle, WrapperStyle } from "./style";
+import {
+  BookCodeSearchListStyle,
+  Cell,
+  Header,
+  Row,
+  Table,
+  TabMenuStyle,
+  WrapperStyle,
+} from "./style";
 import {
   activeTabDifficulty,
   initialColumnWidths,
   typeGroups,
 } from "./constant";
-import { FiInfo } from "react-icons/fi";
 import { SiMicrosoftexcel } from "react-icons/si";
 import { MdCopyright, MdOutlineDelete } from "react-icons/md";
 import { convertType3Options } from "./validation";
 import { LuCopyPlus } from "react-icons/lu";
 import { CgFileDocument } from "react-icons/cg";
 import { GoMoveToTop } from "react-icons/go";
+import axios from "axios";
 
 type FormItem = {
   [key: string]: string | number;
@@ -84,6 +97,7 @@ const DataList: React.FC<{
   fields: any[];
   register: any;
   seriesValue: string;
+  onBookcodeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSeriesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEpiChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEpiNumChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -95,6 +109,7 @@ const DataList: React.FC<{
 }> = ({
   fields,
   register,
+  onBookcodeChange,
   onSeriesChange,
   onEpiChange,
   onEpiNumChange,
@@ -110,7 +125,7 @@ const DataList: React.FC<{
       defaultValues[typeKey].some((item) => item[header] !== "")
   );
 
-  const readOnlyList = ["type", "difficulty", "step", "order"];
+  const readOnlyList = ["book_code", "type", "difficulty", "step", "order"];
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -197,7 +212,9 @@ const DataList: React.FC<{
                       defaultValues[typeKey][index][header] as string
                     }
                     onChange={
-                      header === "series"
+                      header === "book_code"
+                        ? onBookcodeChange
+                        : header === "series"
                         ? onSeriesChange
                         : header === "episode"
                         ? onEpiChange
@@ -264,10 +281,14 @@ export const App: React.FC = () => {
   });
 
   const fieldArrays = useFieldArrays(control);
+  const [bookcodeValue, setBookcodeValue] = useState("");
   const [seriesValue, setSeriesValue] = useState("");
   const [epsodeValue, setEpsodeValue] = useState("");
   const [episodeNumValue, setEpisodeNumValue] = useState("");
   const [hiddenFields, setHiddenFields] = useState<string[]>([
+    "series",
+    "episode",
+    "episode_order",
     "step",
     "difficulty",
     "order",
@@ -313,6 +334,15 @@ export const App: React.FC = () => {
       isClosable: false,
       duration: 1500,
       position: "top",
+    });
+  };
+
+  const onBookcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBookcodeValue(value);
+    fieldArrays.forEach(({ fields }, index) => {
+      const typeKey = `type${index + 1}`;
+      fields.forEach((_, i) => setValue(`${typeKey}.${i}.book_code`, value));
     });
   };
 
@@ -560,6 +590,45 @@ export const App: React.FC = () => {
     });
   };
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [bookCodeSearch, setBookCodeSearch] = useState<string>("");
+  const [searchBookCodeList, setSearchBookCodeList] = useState<any[]>();
+
+  useEffect(() => {
+    const delayDebounceTimer = setTimeout(() => {
+      axios
+        .post(`https://admin.onebook-test.com/v1/book/episode/search`, {
+          title: bookCodeSearch,
+        })
+        .then((res) => {
+          if (res && res.data) {
+            setSearchBookCodeList(res.data);
+          }
+        });
+    }, 300);
+    return () => clearTimeout(delayDebounceTimer);
+  }, [bookCodeSearch]);
+  const handleInputChange = (event) => {
+    setBookCodeSearch(event.target.value);
+  };
+  const onBookCodeModal = () => {
+    setBookCodeSearch("");
+    setSearchBookCodeList([]);
+    onOpen();
+  };
+
+  const closeBookCodeModal = () => {
+    setBookCodeSearch("");
+    setSearchBookCodeList([]);
+    onClose();
+  };
+  const onSearchBookCodeChange = (value: any) => {
+    fieldArrays.forEach(({ fields }, index) => {
+      const typeKey = `type${index + 1}`;
+      fields.forEach((_, i) => setValue(`${typeKey}.${i}.book_code`, value));
+    });
+    closeBookCodeModal();
+  };
   return (
     <WrapperStyle>
       <Box className="container" width="100%" margin="0 auto">
@@ -568,7 +637,6 @@ export const App: React.FC = () => {
             <Text fontSize={"md"} fontWeight={"600"}>
               보이는 항목
             </Text>
-            <Text fontSize={"sm"}>(엑셀추출과는 무관)</Text>
           </Flex>
           {Object.keys(headerMap).map((header) => (
             <Checkbox
@@ -698,9 +766,60 @@ export const App: React.FC = () => {
                 - ctrl + 방향키로 인풋커서 이동 / ctrl + enter키로 다음행 이동
               </li>
             </ul>
+            <Modal isCentered isOpen={isOpen} onClose={closeBookCodeModal}>
+              <ModalOverlay onClick={closeBookCodeModal} />
+              <ModalContent>
+                <ModalBody>
+                  <Input
+                    placeholder="책 이름 검색"
+                    value={bookCodeSearch}
+                    onChange={handleInputChange}
+                  />
+                  <BookCodeSearchListStyle>
+                    {searchBookCodeList &&
+                      searchBookCodeList.map((el) => (
+                        <li>
+                          <span>{el.title}</span>
+                          <div className="code-box">
+                            <span>{el.book_code}</span>
+                            <Button
+                              onClick={() =>
+                                onSearchBookCodeChange(el.book_code)
+                              }
+                              size={"sm"}
+                            >
+                              선택
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                  </BookCodeSearchListStyle>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
             <TabPanels>
               {Object.keys(typeGroups).map((groupKey) => (
                 <TabPanel key={groupKey} className="tab-table-box">
+                  <Flex gap={2} mb={5}>
+                    <Button onClick={onBookCodeModal} fontSize={"sm"}>
+                      북코드 검색
+                    </Button>
+                    <Input
+                      width={300}
+                      placeholder={"원서 시리즈"}
+                      onChange={onSeriesChange}
+                    />
+                    <Input
+                      width={300}
+                      placeholder={"원서 에피소드"}
+                      onChange={onEpiChange}
+                    />
+                    <Input
+                      width={150}
+                      placeholder={"에피소드 순서"}
+                      onChange={onEpiNumChange}
+                    />
+                  </Flex>
                   {typeGroups[groupKey as keyof typeof typeGroups].map(
                     (typeIndex) => (
                       <Box mb={6} key={`type${typeIndex}`}>
@@ -708,6 +827,7 @@ export const App: React.FC = () => {
                           fields={fieldArrays[typeIndex - 1].fields}
                           register={register}
                           seriesValue={seriesValue}
+                          onBookcodeChange={onBookcodeChange}
                           onSeriesChange={onSeriesChange}
                           onEpiChange={onEpiChange}
                           onEpiNumChange={onEpiNumChange}
