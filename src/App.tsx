@@ -60,6 +60,7 @@ import { LuCopyPlus } from "react-icons/lu";
 import { CgFileDocument } from "react-icons/cg";
 import { GoMoveToTop } from "react-icons/go";
 import axios from "axios";
+import { IoSearch } from "react-icons/io5";
 
 type FormItem = {
   [key: string]: string | number;
@@ -127,7 +128,16 @@ const DataList: React.FC<{
       defaultValues[typeKey].some((item) => item[header] !== "")
   );
 
-  const readOnlyList = ["book_code", "type", "difficulty", "step", "order"];
+  const readOnlyList = [
+    "book_code",
+    "series",
+    "episode",
+    "episode_order",
+    "type",
+    "difficulty",
+    "step",
+    "order",
+  ];
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -291,6 +301,7 @@ export const App: React.FC = () => {
   const [epsodeValue, setEpsodeValue] = useState("");
   const [episodeNumValue, setEpisodeNumValue] = useState("");
   const [hiddenFields, setHiddenFields] = useState<string[]>([
+    "book_code",
     "series",
     "episode",
     "episode_order",
@@ -583,6 +594,17 @@ export const App: React.FC = () => {
     });
   };
 
+  const [scrollTopVisible, setScrollTopVisible] = useState(false);
+  useEffect(() => {
+    window.addEventListener("scroll", (e) => {
+      if (window.scrollY > 0) {
+        setScrollTopVisible(true);
+      } else {
+        setScrollTopVisible(false);
+      }
+    });
+  }, []);
+
   const onMoveTop = () => {
     window.scrollTo({
       top: 0,
@@ -623,6 +645,7 @@ export const App: React.FC = () => {
     onClose();
   };
   const onSearchBookCodeChange = (value: any) => {
+    setBookcodeValue(value);
     fieldArrays.forEach(({ fields }, index) => {
       const typeKey = `type${index + 1}`;
       fields.forEach((_, i) => setValue(`${typeKey}.${i}.book_code`, value));
@@ -782,9 +805,9 @@ export const App: React.FC = () => {
             <Modal isCentered isOpen={isOpen} onClose={closeBookCodeModal}>
               <ModalOverlay onClick={closeBookCodeModal} />
               <ModalContent>
-                <ModalBody>
+                <ModalBody padding={"2rem 2rem 1rem 2rem"}>
                   <Input
-                    placeholder="책 이름 검색"
+                    placeholder="책 이름을 입력해 주세요"
                     value={bookCodeSearch}
                     onChange={handleInputChange}
                   />
@@ -809,6 +832,8 @@ export const App: React.FC = () => {
                             <div className="code-box">
                               <span>{el.book_code}</span>
                               <Button
+                                variant="outline"
+                                colorScheme={"green"}
                                 onClick={() =>
                                   onSearchBookCodeChange(el.book_code)
                                 }
@@ -828,8 +853,22 @@ export const App: React.FC = () => {
               {Object.keys(typeGroups).map((groupKey) => (
                 <TabPanel key={groupKey} className="tab-table-box">
                   <Flex gap={2} mb={5}>
-                    <Button onClick={onBookCodeModal} fontSize={"sm"}>
+                    <Input
+                      placeholder="북코드"
+                      readOnly
+                      width={100}
+                      value={bookcodeValue}
+                      onClick={onBookCodeModal}
+                    />
+                    <Button
+                      colorScheme={"green"}
+                      onClick={onBookCodeModal}
+                      fontSize={"sm"}
+                    >
                       북코드 검색
+                      <IoSearch
+                        style={{ marginLeft: "4px", fontSize: "1.2rem" }}
+                      />
                     </Button>
                     <Input
                       width={300}
@@ -892,9 +931,11 @@ export const App: React.FC = () => {
             </Button>
           </div>
         </form>
-        <Button onClick={onMoveTop} className="btn-top-move" size={"lg"}>
-          <GoMoveToTop />
-        </Button>
+        {scrollTopVisible && (
+          <Button onClick={onMoveTop} className="btn-top-move" size={"lg"}>
+            <GoMoveToTop />
+          </Button>
+        )}
       </Box>
       <div className="footer">
         <MdCopyright />
