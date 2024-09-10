@@ -305,7 +305,7 @@ export const App: React.FC = () => {
     "series",
     "episode",
     "episode_order",
-    "step",
+    "type",
     "difficulty",
     "order",
   ]);
