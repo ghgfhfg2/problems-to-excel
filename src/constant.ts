@@ -30,4 +30,4 @@ export const typeGroups = {
   F: [2, 5, 12, 13, 15],
 };
 
-export const activeTabDifficulty = ["a", "b", "c", "a", "c"];
+export const activeTabDifficulty = ["a", "b", "c", "a", "b", "c"];

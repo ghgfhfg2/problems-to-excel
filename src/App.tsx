@@ -521,7 +521,6 @@ export const App: React.FC = () => {
                   : el[key];
             }
             if (key === "difficulty") {
-              console.log(el.type, el[key], activeTabDifficulty[activeTab]);
               el[key] = activeTabDifficulty[activeTab];
             }
           }
@@ -531,16 +530,19 @@ export const App: React.FC = () => {
 
     const combinedData = typeGroups[
       activeGroup as keyof typeof typeGroups
-    ].flatMap((typeIndex) =>
-      data[`type${typeIndex}`].map((item) => {
+    ].flatMap((typeIndex) => {
+      const filterData = data[`type${typeIndex}`].filter(
+        (el) => el.options || el.answer
+      );
+      return filterData.map((item) => {
+        console.log(item);
         const newItem = {};
         Object.keys(item).forEach((key) => {
           newItem[headerMap[key].excelHeader] = item[key];
         });
         return newItem;
-      })
-    );
-
+      });
+    });
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
