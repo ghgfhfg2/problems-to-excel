@@ -543,6 +543,7 @@ export const App: React.FC = () => {
         return newItem;
       });
     });
+
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
