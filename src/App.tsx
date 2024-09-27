@@ -19,6 +19,9 @@ import {
   ModalOverlay,
   ModalContent,
   ModalBody,
+  RadioGroup,
+  Stack,
+  Radio,
 } from "@chakra-ui/react";
 import * as XLSX from "xlsx";
 import {
@@ -61,6 +64,8 @@ import { CgFileDocument } from "react-icons/cg";
 import { GoMoveToTop } from "react-icons/go";
 import axios from "axios";
 import { IoSearch } from "react-icons/io5";
+import { convertTextToSpeech } from "./api/getTts";
+import { convertAudioData } from "./utils";
 
 type FormItem = {
   [key: string]: string | number;
@@ -294,7 +299,7 @@ export const App: React.FC = () => {
   } = useForm<FormValues>({
     defaultValues,
   });
-
+  const [voice, setVoice] = useState("en-US-Wavenet-B");
   const fieldArrays = useFieldArrays(control);
   const [bookcodeValue, setBookcodeValue] = useState("");
   const [seriesValue, setSeriesValue] = useState("");
@@ -535,7 +540,6 @@ export const App: React.FC = () => {
         (el) => el.options || el.answer
       );
       return filterData.map((item) => {
-        console.log(item);
         const newItem = {};
         Object.keys(item).forEach((key) => {
           newItem[headerMap[key].excelHeader] = item[key];
@@ -544,6 +548,9 @@ export const App: React.FC = () => {
       });
     });
 
+    const ttsArr = convertAudioData(combinedData);
+
+    convertTextToSpeech(ttsArr, voice).then((res) => console.log(res));
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
@@ -775,28 +782,53 @@ export const App: React.FC = () => {
                 handleSubmit(onSubmit)(e);
               }}
             >
-              <div className="excel-btn-box">
-                <Flex flexDirection={"column"} alignItems={"center"} gap={1}>
-                  <Switch
-                    onChange={onChangeEmptyCheck}
-                    checked={emptyCheckState}
-                    defaultChecked
+              <Flex flexDirection={"column"} alignItems={"center"}>
+                <div className="excel-btn-box">
+                  <Flex flexDirection={"column"} alignItems={"center"} gap={1}>
+                    <Switch
+                      onChange={onChangeEmptyCheck}
+                      checked={emptyCheckState}
+                      defaultChecked
+                      colorScheme="green"
+                      size="lg"
+                    />
+                    <Text fontSize={"12px"}>빈값체크</Text>
+                  </Flex>
+                  <Button
+                    className="btn-exit"
                     colorScheme="green"
-                    size="lg"
-                  />
-                  <Text fontSize={"12px"}>빈값체크</Text>
+                    type="submit"
+                  >
+                    <SiMicrosoftexcel /> Export to Excel
+                  </Button>
+                  <Button
+                    className="btn-delete"
+                    colorScheme="red"
+                    onClick={onResetInput}
+                  >
+                    <MdOutlineDelete />
+                  </Button>
+                </div>
+                <Flex gap={4} alignItems={"center"}>
+                  <Text fontSize={"sm"}>목소리 선택</Text>
+                  <RadioGroup
+                    colorScheme={"green"}
+                    onChange={setVoice}
+                    value={voice}
+                  >
+                    <Stack direction="row">
+                      <Radio defaultChecked value="en-US-Wavenet-B">
+                        남1
+                      </Radio>
+                      <Radio value="en-US-Wavenet-D">남2</Radio>
+                      <Radio value="en-US-Wavenet-F">남3</Radio>
+                      <Radio value="en-US-Wavenet-A">여1</Radio>
+                      <Radio value="en-US-Wavenet-C">여2</Radio>
+                      <Radio value="en-US-Wavenet-E">여3</Radio>
+                    </Stack>
+                  </RadioGroup>
                 </Flex>
-                <Button className="btn-exit" colorScheme="green" type="submit">
-                  <SiMicrosoftexcel /> Export to Excel
-                </Button>
-                <Button
-                  className="btn-delete"
-                  colorScheme="red"
-                  onClick={onResetInput}
-                >
-                  <MdOutlineDelete />
-                </Button>
-              </div>
+              </Flex>
             </form>
             <ul className="top-info">
               <li>- 여러문항은 / 로 구분하여 작성</li>
