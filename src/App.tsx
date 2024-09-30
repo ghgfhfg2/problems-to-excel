@@ -65,7 +65,7 @@ import { GoMoveToTop } from "react-icons/go";
 import axios from "axios";
 import { IoSearch } from "react-icons/io5";
 import { convertTextToSpeech } from "./api/getTts";
-import { convertAudioData } from "./utils";
+import { convertAudioData, onSoundPlay } from "./utils";
 
 type FormItem = {
   [key: string]: string | number;
@@ -318,6 +318,12 @@ export const App: React.FC = () => {
   const [columnWidths] = useState(initialColumnWidths);
   const [onResetState, setOnResetState] = useState(false);
   const [emptyCheckState, setEmptyCheckState] = useState(true);
+
+  const onSetVoice = (e: string) => {
+    setVoice(e);
+    onSoundPlay(`/sound/${e}.mp3`);
+  };
+  //목소리 선택
 
   const onChangeEmptyCheck = () => {
     setEmptyCheckState(!emptyCheckState);
@@ -813,7 +819,7 @@ export const App: React.FC = () => {
                   <Text fontSize={"sm"}>목소리 선택</Text>
                   <RadioGroup
                     colorScheme={"green"}
-                    onChange={setVoice}
+                    onChange={(e) => onSetVoice(e)}
                     value={voice}
                   >
                     <Stack direction="row">
@@ -821,8 +827,8 @@ export const App: React.FC = () => {
                         남1
                       </Radio>
                       <Radio value="en-US-Wavenet-D">남2</Radio>
-                      <Radio value="en-US-Wavenet-F">남3</Radio>
-                      <Radio value="en-US-Wavenet-A">여1</Radio>
+                      <Radio value="en-US-Wavenet-A">남3</Radio>
+                      <Radio value="en-US-Wavenet-F">여1</Radio>
                       <Radio value="en-US-Wavenet-C">여2</Radio>
                       <Radio value="en-US-Wavenet-E">여3</Radio>
                     </Stack>

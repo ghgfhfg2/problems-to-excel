@@ -67,3 +67,18 @@ export const convertAudioData = (data) => {
   });
   return arr;
 };
+
+let currentAudio: HTMLAudioElement | null = null;
+
+export const onSoundPlay = (url: string) => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = ""; // 브라우저 자원을 해제하기 위함
+    currentAudio = null;
+  }
+
+  const audio = new Audio(url);
+  audio.play();
+
+  currentAudio = audio;
+};
