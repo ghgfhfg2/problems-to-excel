@@ -25,6 +25,7 @@ export const WrapperStyle = styled.div`
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
     padding: 1rem 0;
     .chakra-checkbox__label {

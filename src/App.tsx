@@ -66,6 +66,7 @@ import axios from "axios";
 import { IoSearch } from "react-icons/io5";
 import { convertTextToSpeech } from "./api/getTts";
 import { convertAudioData, onSoundPlay } from "./utils";
+import WordExport from "./components/WordExport";
 
 type FormItem = {
   [key: string]: string | number;
@@ -420,6 +421,7 @@ export const App: React.FC = () => {
 
   const onChangeTab = (idx: number) => {
     if (idx === activeTab) return;
+    const tab = document.querySelector(`.tab-${idx}`) as HTMLElement;
     const allInputs = document
       .querySelectorAll(`.tab-table-box`)
       [activeTab].querySelectorAll("input");
@@ -430,7 +432,6 @@ export const App: React.FC = () => {
         break;
       }
     }
-    const tab = document.querySelector(`.tab-${idx}`) as HTMLElement;
     if (isValue) {
       const moveConfirm = confirm(
         "입력중인 항목이 있습니다.\n난이도를 변경하면 입력한 값이 모두 초기화 됩니다.\n이동 하시겠습니까?"
@@ -668,316 +669,347 @@ export const App: React.FC = () => {
     });
     closeBookCodeModal();
   };
+
+  //추출페이지 타입
+  const [pageType, setPageType] = useState(1);
+  const onTypeChange = (num: number) => {
+    setPageType(num);
+  };
+
   return (
     <WrapperStyle>
-      <Box className="container" width="100%" margin="0 auto">
-        <Flex className="view-header" gap={"1rem"}>
-          <Flex alignItems={"center"}>
-            <Text fontSize={"md"} fontWeight={"600"}>
-              보이는 항목
-            </Text>
+      <Flex justifyContent={"center"} gap={2} padding={3}>
+        <Button
+          colorScheme={pageType === 1 ? "green" : "gray"}
+          onClick={() => onTypeChange(1)}
+        >
+          문제 추출
+        </Button>
+        <Button
+          colorScheme={pageType === 2 ? "green" : "gray"}
+          onClick={() => onTypeChange(2)}
+        >
+          단어 추출
+        </Button>
+      </Flex>
+      {pageType === 1 ? (
+        <Box className="container" width="100%" margin="0 auto">
+          <Flex className="view-header" gap={"1rem"}>
+            <Flex alignItems={"center"}>
+              <Text fontSize={"md"} fontWeight={"600"}>
+                보이는 항목
+              </Text>
+            </Flex>
+            {Object.keys(headerMap).map((header) => (
+              <Checkbox
+                colorScheme="green"
+                key={header}
+                isChecked={!hiddenFields.includes(header)}
+                onChange={() => toggleHiddenField(header)}
+              >
+                {headerMap[header].label}
+              </Checkbox>
+            ))}
           </Flex>
-          {Object.keys(headerMap).map((header) => (
-            <Checkbox
-              colorScheme="green"
-              key={header}
-              isChecked={!hiddenFields.includes(header)}
-              onChange={() => toggleHiddenField(header)}
-            >
-              {headerMap[header].label}
-            </Checkbox>
-          ))}
-        </Flex>
-        <div className="content-box">
-          <TabMenuStyle>
-            <li>
-              <button
-                onClick={() => onChangeTab(0)}
-                className={activeTab === 0 ? "on" : ""}
-              >
-                <CgFileDocument />
-                A난이도(non-fiction)
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onChangeTab(1)}
-                className={activeTab === 1 ? "on" : ""}
-              >
-                <CgFileDocument />
-                B난이도
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onChangeTab(2)}
-                className={activeTab === 2 ? "on" : ""}
-              >
-                <CgFileDocument />
-                C난이도
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onChangeTab(3)}
-                className={activeTab === 3 ? "on" : ""}
-              >
-                <CgFileDocument />
-                A난이도(fiction)
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onChangeTab(4)}
-                className={activeTab === 4 ? "on" : ""}
-              >
-                <CgFileDocument />
-                B난이도(fiction)
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => onChangeTab(5)}
-                className={activeTab === 5 ? "on" : ""}
-              >
-                <CgFileDocument />
-                C난이도(fiction)
-              </button>
-            </li>
-          </TabMenuStyle>
-          <Tabs
-            variant="solid-rounded"
-            size={"lg"}
-            colorScheme="green"
-            onChange={(index) => {
-              setActiveTab(index);
-            }}
-          >
-            {/* 활성화된 탭 추적 */}
-            <Flex alignItems={"center"} justifyContent={"space-between"}>
-              <TabList className="tab-menu-list">
-                <Tab className="tab-0" px={"2rem"}>
+          <div className="content-box">
+            <TabMenuStyle>
+              <li>
+                <button
+                  onClick={() => onChangeTab(0)}
+                  className={activeTab === 0 ? "on" : ""}
+                >
                   <CgFileDocument />
                   A난이도(non-fiction)
-                </Tab>
-                <Tab className="tab-1" px={"2rem"}>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onChangeTab(1)}
+                  className={activeTab === 1 ? "on" : ""}
+                >
                   <CgFileDocument />
                   B난이도
-                </Tab>
-                <Tab className="tab-2" px={"2rem"}>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onChangeTab(2)}
+                  className={activeTab === 2 ? "on" : ""}
+                >
                   <CgFileDocument />
-                  C난이도(non-fiction)
-                </Tab>
-                <Tab className="tab-3" px={"1.5rem"}>
+                  C난이도
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onChangeTab(3)}
+                  className={activeTab === 3 ? "on" : ""}
+                >
                   <CgFileDocument />
                   A난이도(fiction)
-                </Tab>
-                <Tab className="tab-4" px={"1.5rem"}>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onChangeTab(4)}
+                  className={activeTab === 4 ? "on" : ""}
+                >
                   <CgFileDocument />
                   B난이도(fiction)
-                </Tab>
-                <Tab className="tab-5" px={"1.5rem"}>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onChangeTab(5)}
+                  className={activeTab === 5 ? "on" : ""}
+                >
                   <CgFileDocument />
                   C난이도(fiction)
-                </Tab>
-              </TabList>
-            </Flex>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit(onSubmit)(e);
+                </button>
+              </li>
+            </TabMenuStyle>
+            <Tabs
+              variant="solid-rounded"
+              size={"lg"}
+              colorScheme="green"
+              onChange={(index) => {
+                setActiveTab(index);
               }}
             >
-              <Flex flexDirection={"column"} alignItems={"center"}>
-                <div className="excel-btn-box">
-                  <Flex flexDirection={"column"} alignItems={"center"} gap={1}>
-                    <Switch
-                      onChange={onChangeEmptyCheck}
-                      checked={emptyCheckState}
-                      defaultChecked
-                      colorScheme="green"
-                      size="lg"
-                    />
-                    <Text fontSize={"12px"}>빈값체크</Text>
-                  </Flex>
-                  <Button
-                    className="btn-exit"
-                    colorScheme="green"
-                    type="submit"
-                  >
-                    <SiMicrosoftexcel /> Export to Excel
-                  </Button>
-                  <Button
-                    className="btn-delete"
-                    colorScheme="red"
-                    onClick={onResetInput}
-                  >
-                    <MdOutlineDelete />
-                  </Button>
-                </div>
-                <Flex gap={4} alignItems={"center"}>
-                  <Text fontSize={"sm"}>목소리 선택</Text>
-                  <RadioGroup
-                    colorScheme={"green"}
-                    onChange={(e) => onSetVoice(e)}
-                    value={voice}
-                  >
-                    <Stack direction="row">
-                      <Radio defaultChecked value="en-US-Wavenet-B">
-                        남1
-                      </Radio>
-                      <Radio value="en-US-Wavenet-D">남2</Radio>
-                      <Radio value="en-US-Wavenet-A">남3</Radio>
-                      <Radio value="en-US-Wavenet-F">여1</Radio>
-                      <Radio value="en-US-Wavenet-C">여2</Radio>
-                      <Radio value="en-US-Wavenet-E">여3</Radio>
-                    </Stack>
-                  </RadioGroup>
-                </Flex>
+              {/* 활성화된 탭 추적 */}
+              <Flex alignItems={"center"} justifyContent={"space-between"}>
+                <TabList className="tab-menu-list">
+                  <Tab className="tab-0" px={"2rem"}>
+                    <CgFileDocument />
+                    A난이도(non-fiction)
+                  </Tab>
+                  <Tab className="tab-1" px={"2rem"}>
+                    <CgFileDocument />
+                    B난이도
+                  </Tab>
+                  <Tab className="tab-2" px={"2rem"}>
+                    <CgFileDocument />
+                    C난이도(non-fiction)
+                  </Tab>
+                  <Tab className="tab-3" px={"1.5rem"}>
+                    <CgFileDocument />
+                    A난이도(fiction)
+                  </Tab>
+                  <Tab className="tab-4" px={"1.5rem"}>
+                    <CgFileDocument />
+                    B난이도(fiction)
+                  </Tab>
+                  <Tab className="tab-5" px={"1.5rem"}>
+                    <CgFileDocument />
+                    C난이도(fiction)
+                  </Tab>
+                </TabList>
               </Flex>
-            </form>
-            <ul className="top-info">
-              <li>- 여러문항은 / 로 구분하여 작성</li>
-              <li>- 빈칸으로 표시될 부분은 @_ 로 작성 (유형 7,14)</li>
-              <li>
-                - ctrl + 방향키로 인풋커서 이동 / ctrl + enter키로 다음행 이동
-              </li>
-            </ul>
-            <Modal isCentered isOpen={isOpen} onClose={closeBookCodeModal}>
-              <ModalOverlay onClick={closeBookCodeModal} />
-              <ModalContent>
-                <ModalBody padding={"2rem 2rem 1rem 2rem"}>
-                  <Input
-                    placeholder="책 이름을 입력해 주세요"
-                    value={bookCodeSearch}
-                    onChange={handleInputChange}
-                  />
-                  <BookCodeSearchListStyle>
-                    {searchBookCodeList &&
-                      searchBookCodeList.map((el, idx) => {
-                        const toLowTitle = el.title.toLowerCase();
-                        const toLowSearch = bookCodeSearch.toLowerCase();
-                        const splitTitle = el.title
-                          ? toLowTitle.split(toLowSearch)
-                          : "";
-                        if (!splitTitle) return;
-                        return (
-                          <li key={idx}>
-                            <span>
-                              {splitTitle[0]}
-                              <span className="search-text">
-                                {bookCodeSearch}
-                              </span>
-                              {splitTitle[1]}
-                            </span>
-                            <div className="code-box">
-                              <span>{el.book_code}</span>
-                              <Button
-                                variant="outline"
-                                colorScheme={"green"}
-                                onClick={() =>
-                                  onSearchBookCodeChange(el.book_code)
-                                }
-                                size={"sm"}
-                              >
-                                선택
-                              </Button>
-                            </div>
-                          </li>
-                        );
-                      })}
-                  </BookCodeSearchListStyle>
-                </ModalBody>
-              </ModalContent>
-            </Modal>
-            <TabPanels>
-              {Object.keys(typeGroups).map((groupKey) => (
-                <TabPanel key={groupKey} className="tab-table-box">
-                  <Flex gap={2} mb={5}>
-                    <Input
-                      placeholder="북코드"
-                      readOnly
-                      width={100}
-                      value={bookcodeValue}
-                      onClick={onBookCodeModal}
-                    />
-                    <Button
-                      colorScheme={"green"}
-                      onClick={onBookCodeModal}
-                      fontSize={"sm"}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit(onSubmit)(e);
+                }}
+              >
+                <Flex flexDirection={"column"} alignItems={"center"}>
+                  <div className="excel-btn-box">
+                    <Flex
+                      flexDirection={"column"}
+                      alignItems={"center"}
+                      gap={1}
                     >
-                      북코드 검색
-                      <IoSearch
-                        style={{ marginLeft: "4px", fontSize: "1.2rem" }}
+                      <Switch
+                        onChange={onChangeEmptyCheck}
+                        checked={emptyCheckState}
+                        defaultChecked
+                        colorScheme="green"
+                        size="lg"
                       />
+                      <Text fontSize={"12px"}>빈값체크</Text>
+                    </Flex>
+                    <Button
+                      className="btn-exit"
+                      colorScheme="green"
+                      type="submit"
+                    >
+                      <SiMicrosoftexcel /> Export to Excel
                     </Button>
-                    <Input
-                      width={300}
-                      placeholder={"원서 시리즈"}
-                      onChange={onSeriesChange}
-                    />
-                    <Input
-                      width={300}
-                      placeholder={"원서 에피소드"}
-                      onChange={onEpiChange}
-                    />
-                    <Input
-                      width={150}
-                      placeholder={"에피소드 순서"}
-                      onChange={onEpiNumChange}
-                    />
+                    <Button
+                      className="btn-delete"
+                      colorScheme="red"
+                      onClick={onResetInput}
+                    >
+                      <MdOutlineDelete />
+                    </Button>
+                  </div>
+                  <Flex gap={4} alignItems={"center"}>
+                    <Text fontSize={"sm"}>목소리 선택</Text>
+                    <RadioGroup
+                      colorScheme={"green"}
+                      onChange={(e) => onSetVoice(e)}
+                      value={voice}
+                    >
+                      <Stack direction="row">
+                        <Radio defaultChecked value="en-US-Wavenet-B">
+                          남1
+                        </Radio>
+                        <Radio value="en-US-Wavenet-D">남2</Radio>
+                        <Radio value="en-US-Wavenet-A">남3</Radio>
+                        <Radio value="en-US-Wavenet-F">여1</Radio>
+                        <Radio value="en-US-Wavenet-C">여2</Radio>
+                        <Radio value="en-US-Wavenet-E">여3</Radio>
+                      </Stack>
+                    </RadioGroup>
                   </Flex>
-                  {typeGroups[groupKey as keyof typeof typeGroups].map(
-                    (typeIndex) => (
-                      <Box mb={6} key={`type${typeIndex}`}>
-                        <DataList
-                          activeTab={activeTab}
-                          fields={fieldArrays[typeIndex - 1].fields}
-                          register={register}
-                          seriesValue={seriesValue}
-                          onBookcodeChange={onBookcodeChange}
-                          onSeriesChange={onSeriesChange}
-                          onEpiChange={onEpiChange}
-                          onEpiNumChange={onEpiNumChange}
-                          onSetValue={onSetValue}
-                          typeKey={`type${typeIndex}`}
-                          hiddenFields={hiddenFields}
-                          columnWidths={columnWidths}
-                          onAutoFill={onAutoFill}
+                </Flex>
+              </form>
+              <ul className="top-info">
+                <li>- 여러문항은 / 로 구분하여 작성</li>
+                <li>- 빈칸으로 표시될 부분은 @_ 로 작성 (유형 7,14)</li>
+                <li>
+                  - ctrl + 방향키로 인풋커서 이동 / ctrl + enter키로 다음행 이동
+                </li>
+              </ul>
+              <Modal isCentered isOpen={isOpen} onClose={closeBookCodeModal}>
+                <ModalOverlay onClick={closeBookCodeModal} />
+                <ModalContent>
+                  <ModalBody padding={"2rem 2rem 1rem 2rem"}>
+                    <Input
+                      placeholder="책 이름을 입력해 주세요"
+                      value={bookCodeSearch}
+                      onChange={handleInputChange}
+                    />
+                    <BookCodeSearchListStyle>
+                      {searchBookCodeList &&
+                        searchBookCodeList.map((el, idx) => {
+                          const toLowTitle = el.title.toLowerCase();
+                          const toLowSearch = bookCodeSearch.toLowerCase();
+                          const splitTitle = el.title
+                            ? toLowTitle.split(toLowSearch)
+                            : "";
+                          if (!splitTitle) return;
+                          return (
+                            <li key={idx}>
+                              <span>
+                                {splitTitle[0]}
+                                <span className="search-text">
+                                  {bookCodeSearch}
+                                </span>
+                                {splitTitle[1]}
+                              </span>
+                              <div className="code-box">
+                                <span>{el.book_code}</span>
+                                <Button
+                                  variant="outline"
+                                  colorScheme={"green"}
+                                  onClick={() =>
+                                    onSearchBookCodeChange(el.book_code)
+                                  }
+                                  size={"sm"}
+                                >
+                                  선택
+                                </Button>
+                              </div>
+                            </li>
+                          );
+                        })}
+                    </BookCodeSearchListStyle>
+                  </ModalBody>
+                </ModalContent>
+              </Modal>
+              <TabPanels>
+                {Object.keys(typeGroups).map((groupKey) => (
+                  <TabPanel key={groupKey} className="tab-table-box">
+                    <Flex gap={2} mb={5}>
+                      <Input
+                        placeholder="북코드"
+                        readOnly
+                        width={100}
+                        value={bookcodeValue}
+                        onClick={onBookCodeModal}
+                      />
+                      <Button
+                        colorScheme={"green"}
+                        onClick={onBookCodeModal}
+                        fontSize={"sm"}
+                      >
+                        북코드 검색
+                        <IoSearch
+                          style={{ marginLeft: "4px", fontSize: "1.2rem" }}
                         />
-                      </Box>
-                    )
-                  )}
-                </TabPanel>
-              ))}
-            </TabPanels>
-          </Tabs>
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit(onSubmit)(e);
-          }}
-        >
-          <div className="excel-btn-box">
-            <Button className="btn-exit" colorScheme="green" type="submit">
-              <SiMicrosoftexcel /> Export to Excel
-            </Button>
-            <Button
-              className="btn-delete"
-              colorScheme="red"
-              onClick={onResetInput}
-            >
-              <MdOutlineDelete />
-            </Button>
+                      </Button>
+                      <Input
+                        width={300}
+                        placeholder={"원서 시리즈"}
+                        onChange={onSeriesChange}
+                      />
+                      <Input
+                        width={300}
+                        placeholder={"원서 에피소드"}
+                        onChange={onEpiChange}
+                      />
+                      <Input
+                        width={150}
+                        placeholder={"에피소드 순서"}
+                        onChange={onEpiNumChange}
+                      />
+                    </Flex>
+                    {typeGroups[groupKey as keyof typeof typeGroups].map(
+                      (typeIndex) => (
+                        <Box mb={6} key={`type${typeIndex}`}>
+                          <DataList
+                            activeTab={activeTab}
+                            fields={fieldArrays[typeIndex - 1].fields}
+                            register={register}
+                            seriesValue={seriesValue}
+                            onBookcodeChange={onBookcodeChange}
+                            onSeriesChange={onSeriesChange}
+                            onEpiChange={onEpiChange}
+                            onEpiNumChange={onEpiNumChange}
+                            onSetValue={onSetValue}
+                            typeKey={`type${typeIndex}`}
+                            hiddenFields={hiddenFields}
+                            columnWidths={columnWidths}
+                            onAutoFill={onAutoFill}
+                          />
+                        </Box>
+                      )
+                    )}
+                  </TabPanel>
+                ))}
+              </TabPanels>
+            </Tabs>
           </div>
-        </form>
-        {scrollTopVisible && (
-          <Button onClick={onMoveTop} className="btn-top-move" size={"lg"}>
-            <GoMoveToTop />
-          </Button>
-        )}
-      </Box>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(onSubmit)(e);
+            }}
+          >
+            <div className="excel-btn-box">
+              <Button className="btn-exit" colorScheme="green" type="submit">
+                <SiMicrosoftexcel /> Export to Excel
+              </Button>
+              <Button
+                className="btn-delete"
+                colorScheme="red"
+                onClick={onResetInput}
+              >
+                <MdOutlineDelete />
+              </Button>
+            </div>
+          </form>
+          {scrollTopVisible && (
+            <Button onClick={onMoveTop} className="btn-top-move" size={"lg"}>
+              <GoMoveToTop />
+            </Button>
+          )}
+        </Box>
+      ) : (
+        <>
+          <WordExport />
+        </>
+      )}
       <div className="footer">
         <MdCopyright />
         2024 sooya_dev All rights reserved.
