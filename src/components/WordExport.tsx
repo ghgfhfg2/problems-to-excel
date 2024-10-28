@@ -12,6 +12,7 @@ import { BsSoundwave } from "react-icons/bs";
 import { useState } from "react";
 import { onSoundPlay } from "../utils";
 import { convertTextToSpeech } from "../api/getTts";
+import { IoMdRefresh } from "react-icons/io";
 
 const WordExport = () => {
   const [voice, setVoice] = useState("en-US-Wavenet-B");
@@ -23,6 +24,16 @@ const WordExport = () => {
   };
   //목소리 선택
 
+  //tts 속도조절
+  const [ttsRate, setTtsRate] = useState<number>(1);
+  const onChangeTtsRate = (e) => {
+    console.log(e.target.value);
+    setTtsRate(e.target.value);
+  };
+  const onInitRate = () => {
+    setTtsRate(1);
+  };
+
   const onExportTTS = () => {
     const wordArr = wordList.split("/").map((el) => {
       const obj = {
@@ -31,7 +42,7 @@ const WordExport = () => {
       };
       return obj;
     });
-    convertTextToSpeech(wordArr, voice);
+    convertTextToSpeech(wordArr, voice, ttsRate);
   };
   return (
     <WordExportStyle>
@@ -64,6 +75,19 @@ const WordExport = () => {
             <Radio value="en-US-Wavenet-E">여3</Radio>
           </Stack>
         </RadioGroup>
+      </Flex>
+      <Flex align={"center"} gap={2} mt={3}>
+        <span>tts속도 {ttsRate}</span>
+        <input
+          type="range"
+          value={ttsRate}
+          onChange={onChangeTtsRate}
+          defaultValue={1}
+          min={0.25}
+          max={4.0}
+          step={0.1}
+        />
+        <IoMdRefresh onClick={onInitRate} style={{ cursor: "pointer" }} />
       </Flex>
       <Textarea
         value={wordList}

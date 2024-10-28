@@ -22,6 +22,7 @@ import {
   RadioGroup,
   Stack,
   Radio,
+  Slider,
 } from "@chakra-ui/react";
 import * as XLSX from "xlsx";
 import {
@@ -67,6 +68,7 @@ import { IoSearch } from "react-icons/io5";
 import { convertTextToSpeech } from "./api/getTts";
 import { convertAudioData, onSoundPlay } from "./utils";
 import WordExport from "./components/WordExport";
+import { IoMdRefresh } from "react-icons/io";
 
 type FormItem = {
   [key: string]: string | number;
@@ -557,7 +559,7 @@ export const App: React.FC = () => {
 
     const ttsArr = convertAudioData(combinedData);
 
-    convertTextToSpeech(ttsArr, voice).then((res) => console.log(res));
+    convertTextToSpeech(ttsArr, voice, ttsRate).then((res) => console.log(res));
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
@@ -674,6 +676,15 @@ export const App: React.FC = () => {
   const [pageType, setPageType] = useState(1);
   const onTypeChange = (num: number) => {
     setPageType(num);
+  };
+
+  //tts 속도조절
+  const [ttsRate, setTtsRate] = useState<number>(1);
+  const onChangeTtsRate = (e) => {
+    setTtsRate(e.target.value);
+  };
+  const onInitRate = () => {
+    setTtsRate(1);
   };
 
   return (
@@ -860,6 +871,22 @@ export const App: React.FC = () => {
                         <Radio value="en-US-Wavenet-E">여3</Radio>
                       </Stack>
                     </RadioGroup>
+                  </Flex>
+                  <Flex align={"center"} gap={2} mt={3}>
+                    <span>tts속도 {ttsRate}</span>
+                    <input
+                      type="range"
+                      value={ttsRate}
+                      onChange={onChangeTtsRate}
+                      defaultValue={1}
+                      min={0.25}
+                      max={4.0}
+                      step={0.1}
+                    />
+                    <IoMdRefresh
+                      onClick={onInitRate}
+                      style={{ cursor: "pointer" }}
+                    />
                   </Flex>
                 </Flex>
               </form>
