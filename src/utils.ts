@@ -21,12 +21,11 @@ export const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
 //음성 텍스트 데이터 추출
 export const convertAudioData = (data) => {
   const arr = [];
-  const optionSound = [1, 2];
-  const qSound = [6, 8, 9, 13];
-  const AnswerSound = [10, 11];
+  const optionSound = [2];
+  const qSound = [9, 12, 13];
   //질문배열: 14
-  //조합 : 7
-  //질문추가 : 8,9
+  //질문추가 : 9
+  //영영의미 : 5
   data.forEach((el) => {
     if (optionSound.includes(el.type)) {
       arr.push({
@@ -40,18 +39,10 @@ export const convertAudioData = (data) => {
         filename: `${el.type}_${el.order}.mp3`,
       });
     }
-    if (AnswerSound.includes(el.type)) {
+    if (el.type === 5) {
+      const mean = el.mean.split("/"); //영영뜻
       arr.push({
-        text: el.answer,
-        filename: `${el.type}_${el.order}.mp3`,
-      });
-    }
-    if (el.type === 7) {
-      const filterBlank = el.question.replace("@_", "");
-      const optionArr = el.options.split("/");
-      const text = filterBlank + optionArr[el.answer];
-      arr.push({
-        text,
+        text: mean[1],
         filename: `${el.type}_${el.order}.mp3`,
       });
     }

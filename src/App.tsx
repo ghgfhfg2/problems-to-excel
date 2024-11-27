@@ -643,7 +643,7 @@ export const App: React.FC = () => {
         })
         .then((res) => {
           if (res && res.data) {
-            setSearchBookCodeList(res.data);
+            setSearchBookCodeList(res.data.items);
           }
         });
     }, 400);
