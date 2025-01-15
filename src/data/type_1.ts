@@ -1038,7 +1038,7 @@ export const defaultValuesType12 = [
     order: 1,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1059,7 +1059,7 @@ export const defaultValuesType12 = [
     order: 2,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1080,7 +1080,7 @@ export const defaultValuesType12 = [
     order: 3,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1101,7 +1101,7 @@ export const defaultValuesType12 = [
     order: 4,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1122,7 +1122,7 @@ export const defaultValuesType12 = [
     order: 5,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1143,7 +1143,7 @@ export const defaultValuesType12 = [
     order: 6,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1164,7 +1164,7 @@ export const defaultValuesType12 = [
     order: 7,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1185,7 +1185,7 @@ export const defaultValuesType12 = [
     order: 8,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1206,7 +1206,7 @@ export const defaultValuesType12 = [
     order: 9,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
@@ -1227,7 +1227,7 @@ export const defaultValuesType12 = [
     order: 10,
     question: "Who is coming to the party?",
     image: "",
-    q_sound: "",
+    q_sound: "sample.mp3",
     q_options: "",
     options:
       "The neighbors. / Sarah's friends. / The teachers. / The whole town.",
