@@ -51,7 +51,7 @@ export const convertAudioData = (data) => {
       opArr.forEach((op, idx) => {
         arr.push({
           text: op,
-          filename: `${el.type}_${idx}.mp3`,
+          filename: `${el.type}_${idx + 1}.mp3`,
         });
       });
     }
