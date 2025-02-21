@@ -483,7 +483,7 @@ export const App: React.FC = () => {
 
     let stopState = "";
     const toastList = {
-      b14: "B안-유형14의 문항수는 5개여야 합니다",
+      b14: "B안-유형14의 문항수는 5개여야 합니다.",
       c14: "C안-유형14의 문항수는 8개여야 입니다.",
     };
 
