@@ -638,7 +638,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const delayDebounceTimer = setTimeout(() => {
       axios
-        .post(`https://admin.onebook-test.com/v1/book/episode/search`, {
+        .post(`${import.meta.env.VITE_API_ONEBOOK}/v1/book/episode/search`, {
           title: bookCodeSearch,
         })
         .then((res) => {
