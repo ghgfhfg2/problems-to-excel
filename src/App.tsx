@@ -559,7 +559,9 @@ export const App: React.FC = () => {
 
     const ttsArr = convertAudioData(combinedData);
 
-    convertTextToSpeech(ttsArr, voice, ttsRate).then((res) => console.log(res));
+    convertTextToSpeech(ttsArr, voice, ttsRate, "en", "").then((res) =>
+      console.log(res)
+    );
     const worksheet = XLSX.utils.json_to_sheet(combinedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "ActiveTabData");
