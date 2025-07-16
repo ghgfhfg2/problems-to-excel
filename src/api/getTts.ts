@@ -1,13 +1,21 @@
 import axios from "axios";
 import { b64toBlob } from "../utils";
 
-export const convertTextToSpeech = async (data, voice, rate) => {
+export const convertTextToSpeech = async (
+  data,
+  voice,
+  rate,
+  language,
+  fileName
+) => {
   try {
     // 서버로 텍스트 데이터 전송
     const response = await axios.post(`https://node.onebook-test.com/api/tts`, {
       data, // 클라이언트에서 서버로 보낼 데이터 배열
       voice, //목소리
       rate, //속도
+      language, //언어
+      fileName, //파일명
     });
 
     // 서버에서 받은 파일 데이터 배열을 순회하며 처리

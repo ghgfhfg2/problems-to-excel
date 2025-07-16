@@ -1,6 +1,7 @@
 import {
   Button,
   Flex,
+  Input,
   Radio,
   RadioGroup,
   Stack,
@@ -15,6 +16,68 @@ import { convertTextToSpeech } from "../api/getTts";
 import { IoMdRefresh } from "react-icons/io";
 
 const WordExport = () => {
+  //파일명 입력
+  const [fileName, setFileName] = useState("");
+
+  //언어 선택
+  const [language, setLanguage] = useState("en-US");
+  const onSetLanguage = (e: string) => {
+    setLanguage(e);
+  };
+
+  const voiceList = {
+    en: {
+      language: "en-US",
+      voice: [
+        {
+          name: "남1",
+          value: "en-US-Wavenet-B",
+        },
+        {
+          name: "남2",
+          value: "en-US-Wavenet-D",
+        },
+        {
+          name: "남3",
+          value: "en-US-Wavenet-A",
+        },
+        {
+          name: "여1",
+          value: "en-US-Wavenet-F",
+        },
+        {
+          name: "여2",
+          value: "en-US-Wavenet-C",
+        },
+        {
+          name: "여3",
+          value: "en-US-Wavenet-E",
+        },
+      ],
+    },
+    ko: {
+      language: "ko-KR",
+      voice: [
+        {
+          name: "여1",
+          value: "ko-KR-Wavenet-A",
+        },
+        {
+          name: "여2",
+          value: "ko-KR-Wavenet-B",
+        },
+        {
+          name: "남1",
+          value: "ko-KR-Wavenet-C",
+        },
+        {
+          name: "남2",
+          value: "ko-KR-Wavenet-D",
+        },
+      ],
+    },
+  };
+
   const [voice, setVoice] = useState("en-US-Wavenet-B");
   const [wordList, setWordList] = useState<string>("");
 
@@ -27,7 +90,6 @@ const WordExport = () => {
   //tts 속도조절
   const [ttsRate, setTtsRate] = useState<number>(1);
   const onChangeTtsRate = (e) => {
-    console.log(e.target.value);
     setTtsRate(e.target.value);
   };
   const onInitRate = () => {
@@ -38,11 +100,12 @@ const WordExport = () => {
     const wordArr = wordList.split("/").map((el) => {
       const obj = {
         text: el,
-        filename: el,
+        filename: fileName ? fileName : el,
       };
       return obj;
     });
-    convertTextToSpeech(wordArr, voice, ttsRate);
+    const languageCode = language === "en" ? "en-US" : "ko-KR";
+    convertTextToSpeech(wordArr, voice, ttsRate, languageCode, fileName);
   };
   return (
     <WordExportStyle>
@@ -57,6 +120,21 @@ const WordExport = () => {
         <BsSoundwave />
         TTS 추출하기
       </Button>
+      <Flex gap={4} alignItems={"center"} mb={3}>
+        <Text fontSize={"sm"}>언어 선택</Text>
+        <RadioGroup
+          colorScheme={"green"}
+          onChange={(e) => onSetLanguage(e)}
+          value={language}
+        >
+          <Stack direction="row">
+            <Radio defaultChecked value="en">
+              영어
+            </Radio>
+            <Radio value="ko">한국어</Radio>
+          </Stack>
+        </RadioGroup>
+      </Flex>
       <Flex gap={4} alignItems={"center"}>
         <Text fontSize={"sm"}>목소리 선택</Text>
         <RadioGroup
@@ -65,14 +143,11 @@ const WordExport = () => {
           value={voice}
         >
           <Stack direction="row">
-            <Radio defaultChecked value="en-US-Wavenet-B">
-              남1
-            </Radio>
-            <Radio value="en-US-Wavenet-D">남2</Radio>
-            <Radio value="en-US-Wavenet-A">남3</Radio>
-            <Radio value="en-US-Wavenet-F">여1</Radio>
-            <Radio value="en-US-Wavenet-C">여2</Radio>
-            <Radio value="en-US-Wavenet-E">여3</Radio>
+            {voiceList[language]?.voice.map((el) => (
+              <Radio key={el.value} value={el.value}>
+                {el.name}
+              </Radio>
+            ))}
           </Stack>
         </RadioGroup>
       </Flex>
@@ -89,11 +164,17 @@ const WordExport = () => {
         />
         <IoMdRefresh onClick={onInitRate} style={{ cursor: "pointer" }} />
       </Flex>
+      <Input
+        mt={3}
+        value={fileName}
+        onChange={(e) => setFileName(e.target.value)}
+        placeholder="파일명 입력(공백이면 textArea와 동일)"
+      />
       <Textarea
         value={wordList}
         mt={3}
         onChange={(e) => setWordList(e.target.value)}
-        placeholder="ex) word1/word2/word3"
+        placeholder="추출할 음성 입력 | 여러개일 경우 : word1/word2/word3"
       />
     </WordExportStyle>
   );
